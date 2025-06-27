@@ -105,4 +105,14 @@ public class StockRecord {
     public void setExchange(String exchange) {
         this.exchange = exchange;
     }
+
+    @Override
+    public String toString() {
+        return "StockRecord{" +
+                "id=" + id +
+                ", symbol='" + symbol + '\'' +
+                ", close=" + close +
+                ", date=" + date +
+                '}';
+    }
 }

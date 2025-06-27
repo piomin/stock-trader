@@ -41,10 +41,10 @@ public class StockController {
             @RequestParam(defaultValue = "1day") String interval,
             @RequestParam(defaultValue = "30") String outputSize) {
 
-//        TimeSeriesResponse response = twelveDataService
-//                .getTimeSeries(symbol, interval, outputSize);
-        List<ProfitHistoricalDaily> values = profitService
-                .getHistoricalIntradayData(symbol, LocalDateTime.now().minusDays(3), LocalDateTime.now(), interval);
+        TimeSeriesResponse response = twelveDataService
+                .getTimeSeries(symbol, interval, outputSize);
+//        List<ProfitHistoricalDaily> values = profitService
+//                .getHistoricalIntradayData(symbol, LocalDateTime.now().minusDays(3), LocalDateTime.now(), interval);
         BarSeries series = new BaseBarSeriesBuilder()
                 .withName(symbol)
                 .build();
@@ -57,17 +57,8 @@ public class StockController {
         Strategy strategy = new BaseStrategy(entryRule, exitRule);
 
         AtomicInteger i = new AtomicInteger();
-//        response.getValues().reversed().forEach(value -> {
-//            series.addBar(buildBar(value.getDateTime(),
-//                    value.getOpen(),
-//                    value.getClose(),
-//                    value.getHigh(),
-//                    value.getLow(),
-//                    value.getVolume()));
-//            LOG.info("Added: {}:{} -> {}", i.incrementAndGet(), value.getDateTime(), value.getClose());
-//        });
-        values.reversed().forEach(value -> {
-            series.addBar(buildBar2(value.getDateTime(),
+        response.getValues().reversed().forEach(value -> {
+            series.addBar(buildBar(value.getDateTime(),
                     value.getOpen(),
                     value.getClose(),
                     value.getHigh(),
@@ -75,6 +66,15 @@ public class StockController {
                     value.getVolume()));
             LOG.info("Added: {}:{} -> {}", i.incrementAndGet(), value.getDateTime(), value.getClose());
         });
+//        values.reversed().forEach(value -> {
+//            series.addBar(buildBar2(value.getDateTime(),
+//                    value.getOpen(),
+//                    value.getClose(),
+//                    value.getHigh(),
+//                    value.getLow(),
+//                    value.getVolume()));
+//            LOG.info("Added: {}:{} -> {}", i.incrementAndGet(), value.getDateTime(), value.getClose());
+//        });
 
         BarSeriesManager seriesManager = new BarSeriesManager(series);
         TradingRecord tradingRecord = seriesManager.run(strategy);
