@@ -44,7 +44,7 @@ public class StockController {
 //        TimeSeriesResponse response = twelveDataService
 //                .getTimeSeries(symbol, interval, outputSize);
         List<ProfitHistoricalDaily> values = profitService
-                .getHistoricalDailyData(symbol, LocalDateTime.now().minusDays(3), LocalDateTime.now(), interval);
+                .getHistoricalIntradayData(symbol, LocalDateTime.now().minusDays(3), LocalDateTime.now(), interval);
         BarSeries series = new BaseBarSeriesBuilder()
                 .withName(symbol)
                 .build();

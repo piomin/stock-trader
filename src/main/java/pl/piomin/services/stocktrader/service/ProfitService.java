@@ -39,7 +39,7 @@ public class ProfitService {
      * @param endDate    the end date for the historical data (inclusive), can be null
      * @return list of historical daily data points
      */
-    public List<ProfitHistoricalDaily> getHistoricalDailyData(String ticker, LocalDateTime startDate, LocalDateTime endDate, String interval) {
+    public List<ProfitHistoricalDaily> getHistoricalIntradayData(String ticker, LocalDateTime startDate, LocalDateTime endDate, String interval) {
         UriComponentsBuilder uriBuilder = UriComponentsBuilder
                 .fromPath(HISTORICAL_INTRADAY_ENDPOINT.replace("{ticker}", ticker));
 
@@ -54,6 +54,40 @@ public class ProfitService {
         if (endDate != null) {
 //            uriBuilder.queryParam("end_date", endDate.format(DATE_FORMATTER));
             uriBuilder.queryParam("end_time", endDate.toEpochSecond(ZoneOffset.UTC));
+        }
+
+        ProfitHistoricalDaily[] result = restClient.get()
+                .uri(uriBuilder.build().toUri())
+                .retrieve()
+                .onStatus(
+                        status -> status == HttpStatus.TOO_MANY_REQUESTS,
+                        (request, response) -> {
+                            throw new RuntimeException("API rate limit exceeded. Please try again later.");
+                        })
+                .body(ProfitHistoricalDaily[].class);
+
+        return result != null ? Arrays.asList(result) : List.of();
+    }
+
+
+    /**
+     * Fetches historical daily data for a given ticker
+     *
+     * @param ticker     the stock ticker symbol (e.g., "AAPL" or "AAPL.US")
+     * @param startDate  the start date for the historical data (inclusive), can be null
+     * @param endDate    the end date for the historical data (inclusive), can be null
+     * @return list of historical daily data points
+     */
+    public List<ProfitHistoricalDaily> getHistoricalDailyData(String ticker, LocalDate startDate, LocalDate endDate) {
+        UriComponentsBuilder uriBuilder = UriComponentsBuilder
+                .fromPath(HISTORICAL_DAILY_ENDPOINT.replace("{ticker}", ticker));
+
+        uriBuilder.queryParam("token", properties.getKey());
+        if (startDate != null) {
+            uriBuilder.queryParam("start_date", startDate.format(DATE_FORMATTER));
+        }
+        if (endDate != null) {
+            uriBuilder.queryParam("end_date", endDate.format(DATE_FORMATTER));
         }
 
         ProfitHistoricalDaily[] result = restClient.get()
