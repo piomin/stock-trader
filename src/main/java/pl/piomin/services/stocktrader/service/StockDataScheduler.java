@@ -16,8 +16,10 @@ import org.ta4j.core.rules.CrossedUpIndicatorRule;
 import pl.piomin.services.stocktrader.repository.StockRecordRepository;
 
 import java.time.Duration;
+import java.time.Instant;
 import java.time.LocalDate;
 import java.time.ZoneOffset;
+import java.time.temporal.TemporalUnit;
 import java.util.Arrays;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -84,7 +86,11 @@ public class StockDataScheduler {
 
         Trade lastEntry = tradingRecord.getLastEntry();
         if (lastEntry != null) {
-            LOG.info("[{}] Last entry: {} - Bar: {}", symbol, lastEntry, series.getBar(lastEntry.getIndex()));
+            Bar b = series.getBar(lastEntry.getIndex());
+            boolean isRecent = b.getEndTime().isAfter(LocalDate.now().minusDays(16).atStartOfDay().toInstant(ZoneOffset.UTC));
+            if (isRecent) {
+                LOG.info("[{}] Last entry: {} - Bar: {}", symbol, lastEntry, series.getBar(lastEntry.getIndex()));
+            }
         }
     }
 }
