@@ -2,11 +2,22 @@ package pl.piomin.services.stocktrader.model;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 
+import java.io.IOException;
+import java.time.LocalDate;
+import com.fasterxml.jackson.annotation.JsonFormat;
+import com.fasterxml.jackson.core.JsonParser;
+import com.fasterxml.jackson.databind.DeserializationContext;
+import com.fasterxml.jackson.databind.JsonDeserializer;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
 import java.util.Objects;
 
 public class TimeSeriesData {
     @JsonProperty("datetime")
+    @JsonDeserialize(using = CustomLocalDateTimeDeserializer.class)
     private LocalDateTime dateTime;
     private String open;
     private String high;
@@ -72,6 +83,33 @@ public class TimeSeriesData {
 
     public void setVolume(String volume) {
         this.volume = volume;
+    }
+
+    public static class CustomLocalDateTimeDeserializer extends JsonDeserializer<LocalDateTime> {
+        private static final DateTimeFormatter DATE_FORMAT = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+        private static final DateTimeFormatter DATE_TIME_FORMAT = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+
+        public CustomLocalDateTimeDeserializer() {
+            this(null);
+        }
+
+        public CustomLocalDateTimeDeserializer(Class<?> vc) {
+            super();
+        }
+
+        @Override
+        public LocalDateTime deserialize(JsonParser p, DeserializationContext ctxt) throws IOException {
+            String dateStr = p.getText().trim();
+            try {
+                return LocalDateTime.parse(dateStr, DATE_TIME_FORMAT);
+            } catch (DateTimeParseException e) {
+                try {
+                    return LocalDate.parse(dateStr, DATE_FORMAT).atStartOfDay();
+                } catch (DateTimeParseException e2) {
+                    throw new IOException("Failed to parse date: " + dateStr + ". Expected formats: 'yyyy-MM-dd' or 'yyyy-MM-dd HH:mm:ss'");
+                }
+            }
+        }
     }
 
     @Override
