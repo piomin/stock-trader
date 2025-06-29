@@ -1,13 +1,17 @@
-package pl.piomin.services.stocktrader.service;
+package pl.piomin.services.stocktrader.service.providers;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.HttpStatusCode;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClient;
 import org.springframework.web.util.UriComponentsBuilder;
 import pl.piomin.services.stocktrader.config.ProfitApiProperties;
 import pl.piomin.services.stocktrader.model.ProfitHistoricalDaily;
+import pl.piomin.services.stocktrader.model.StockDailyData;
+import pl.piomin.services.stocktrader.model.StockIntradayData;
+import pl.piomin.services.stocktrader.service.StockService;
 
+import java.time.Duration;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
@@ -16,19 +20,36 @@ import java.util.Arrays;
 import java.util.List;
 
 @Service
-public class ProfitService {
+public class ProfitService implements StockService {
+
     private static final String HISTORICAL_DAILY_ENDPOINT = "/data-api/market-data/historical/daily/{ticker}";
     private static final String HISTORICAL_INTRADAY_ENDPOINT = "/data-api/market-data/historical/intraday/{ticker}";
     private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ISO_LOCAL_DATE;
     
     private final RestClient restClient;
-    private final ProfitApiProperties properties;
+    @Autowired
+    private ProfitApiProperties properties;
 
-    public ProfitService(ProfitApiProperties properties) {
-        this.properties = properties;
+    public ProfitService() {
         this.restClient = RestClient.builder()
                 .baseUrl(properties.getBaseUrl())
                 .build();
+    }
+
+    @Override
+    public List<StockIntradayData> getIntradayData(String symbol, int limit, Duration interval) {
+        return getHistoricalIntradayData(symbol, LocalDateTime.now().minusDays(limit), LocalDateTime.now(), interval.toString())
+                .stream()
+                .map(v -> new StockIntradayData())
+                .toList();
+    }
+
+    @Override
+    public List<StockDailyData> getDailyData(String symbol, int limit) {
+        return getHistoricalDailyData(symbol, LocalDate.now().minusDays(limit), LocalDate.now())
+                .stream()
+                .map(v -> new StockDailyData())
+                .toList();
     }
 
     /**

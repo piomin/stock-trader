@@ -8,6 +8,7 @@ import pl.piomin.services.stocktrader.model.ShareUpdate;
 import pl.piomin.services.stocktrader.model.StockRecord;
 import pl.piomin.services.stocktrader.repository.ShareUpdateRepository;
 import pl.piomin.services.stocktrader.repository.StockRecordRepository;
+import pl.piomin.services.stocktrader.service.providers.ProfitService;
 
 import java.time.LocalDate;
 
@@ -17,17 +18,20 @@ public class ImportDataScheduler {
     private static final Logger LOG = LoggerFactory.getLogger(StockDataScheduler.class);
     private final StockRecordRepository repository;
     private final ShareUpdateRepository shareUpdateRepository;
+    private final StockService stockService;
     private final ProfitService profitService;
 
     public ImportDataScheduler(StockRecordRepository repository,
                                ShareUpdateRepository shareUpdateRepository,
-                               ProfitService profitService) {
+                               ProfitService profitService,
+                               StockService stockService) {
         this.repository = repository;
         this.shareUpdateRepository = shareUpdateRepository;
         this.profitService = profitService;
+        this.stockService = stockService;
     }
 
-    @Scheduled(cron = "0 * * * * *") // Runs at the start of every minute
+    @Scheduled(cron = "0 * * * * *")
     public void importStockData() {
         LOG.info("Starting scheduled stock data update");
         try {

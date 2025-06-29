@@ -11,13 +11,11 @@ import org.ta4j.core.indicators.helpers.ClosePriceIndicator;
 import org.ta4j.core.num.DecimalNum;
 import org.ta4j.core.rules.CrossedDownIndicatorRule;
 import org.ta4j.core.rules.CrossedUpIndicatorRule;
-import pl.piomin.services.stocktrader.model.ProfitHistoricalDaily;
 import pl.piomin.services.stocktrader.model.TimeSeriesResponse;
-import pl.piomin.services.stocktrader.service.ProfitService;
-import pl.piomin.services.stocktrader.service.TwelveDataService;
+import pl.piomin.services.stocktrader.service.providers.ProfitService;
+import pl.piomin.services.stocktrader.service.providers.TwelveDataService;
 
 import java.time.*;
-import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 
 @RestController
@@ -42,7 +40,7 @@ public class StockController {
             @RequestParam(defaultValue = "30") String outputSize) {
 
         TimeSeriesResponse response = twelveDataService
-                .getTimeSeries(symbol, interval, outputSize);
+                .getTimeSeries(symbol, interval, Integer.parseInt(outputSize));
 //        List<ProfitHistoricalDaily> values = profitService
 //                .getHistoricalIntradayData(symbol, LocalDateTime.now().minusDays(3), LocalDateTime.now(), interval);
         BarSeries series = new BaseBarSeriesBuilder()

@@ -5,7 +5,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.web.bind.annotation.*;
 import pl.piomin.services.stocktrader.model.StockRecord;
 import pl.piomin.services.stocktrader.repository.StockRecordRepository;
-import pl.piomin.services.stocktrader.service.ProfitService;
+import pl.piomin.services.stocktrader.service.providers.ProfitService;
 
 import java.time.LocalDate;
 import java.util.List;
