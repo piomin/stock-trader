@@ -7,5 +7,5 @@ import pl.piomin.services.stocktrader.model.StockRecord;
 import java.util.List;
 
 public interface ShareUpdateRepository extends CrudRepository<ShareUpdate, Long> {
-    List<StockRecord> findBySymbol(String symbol);
+
 }
