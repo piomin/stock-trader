@@ -13,6 +13,8 @@ import org.ta4j.core.indicators.helpers.ClosePriceIndicator;
 import org.ta4j.core.num.DecimalNum;
 import org.ta4j.core.rules.CrossedDownIndicatorRule;
 import org.ta4j.core.rules.CrossedUpIndicatorRule;
+import pl.piomin.services.stocktrader.model.ShareUpdate;
+import pl.piomin.services.stocktrader.repository.ShareUpdateRepository;
 import pl.piomin.services.stocktrader.repository.StockRecordRepository;
 
 import java.time.Duration;
@@ -28,9 +30,12 @@ public class StockDataScheduler {
 
     private static final Logger LOG = LoggerFactory.getLogger(StockDataScheduler.class);
     private final StockRecordRepository repository;
+    private final ShareUpdateRepository shareUpdateRepository;
 
-    public StockDataScheduler(StockRecordRepository repository) {
+    public StockDataScheduler(StockRecordRepository repository,
+                              ShareUpdateRepository shareUpdateRepository) {
         this.repository = repository;
+        this.shareUpdateRepository = shareUpdateRepository;
     }
 
     @Value("${stock.symbols}")
@@ -42,7 +47,7 @@ public class StockDataScheduler {
     public void updateStockDataHourly() {
         LOG.info("Starting scheduled stock data update");
         try {
-            Arrays.stream(symbols.split(",")).forEach(this::run);
+            shareUpdateRepository.findAll().forEach(it -> run(it.getSymbol()));
             LOG.info("Completed stock data update");
         } catch (Exception e) {
             LOG.error("Error during scheduled stock data update", e);
