@@ -8,7 +8,6 @@ import pl.piomin.services.stocktrader.model.ShareUpdate;
 import pl.piomin.services.stocktrader.model.StockRecord;
 import pl.piomin.services.stocktrader.repository.ShareUpdateRepository;
 import pl.piomin.services.stocktrader.repository.StockRecordRepository;
-import pl.piomin.services.stocktrader.service.providers.ProfitService;
 
 import java.time.LocalDate;
 
@@ -19,15 +18,15 @@ public class ImportDataScheduler {
     private final StockRecordRepository repository;
     private final ShareUpdateRepository shareUpdateRepository;
     private final StockService stockService;
-    private final ProfitService profitService;
+//    private final ProfitService profitService;
 
     public ImportDataScheduler(StockRecordRepository repository,
                                ShareUpdateRepository shareUpdateRepository,
-                               ProfitService profitService,
+//                               ProfitService profitService,
                                StockService stockService) {
         this.repository = repository;
         this.shareUpdateRepository = shareUpdateRepository;
-        this.profitService = profitService;
+//        this.profitService = profitService;
         this.stockService = stockService;
     }
 
@@ -45,14 +44,14 @@ public class ImportDataScheduler {
     public void run(ShareUpdate shareUpdate) {
         LOG.info("Importing data for symbol: {}", shareUpdate.getSymbol());
         StockRecord record = repository.findFirstBySymbolOrderByDateDesc(shareUpdate.getSymbol());
-        profitService.getHistoricalDailyData(shareUpdate.getSymbol(), record.getDate().plusDays(1), LocalDate.now())
+        stockService.getDailyData(shareUpdate.getSymbol(), record.getDate().plusDays(1))
                 .stream().map(phd -> new StockRecord(shareUpdate.getSymbol(),
                 phd.getOpen(),
                 phd.getClose(),
                 phd.getHigh(),
                 phd.getLow(),
                 phd.getVolume(),
-                phd.getDateTime().toLocalDate(),
+                phd.getDate(),
                 "WAR"))
                 .forEach(repository::save);
         shareUpdate.setLastUpdate(LocalDate.now());

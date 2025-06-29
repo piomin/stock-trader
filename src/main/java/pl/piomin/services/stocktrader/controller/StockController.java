@@ -11,11 +11,14 @@ import org.ta4j.core.indicators.helpers.ClosePriceIndicator;
 import org.ta4j.core.num.DecimalNum;
 import org.ta4j.core.rules.CrossedDownIndicatorRule;
 import org.ta4j.core.rules.CrossedUpIndicatorRule;
+import pl.piomin.services.stocktrader.model.StockIntradayData;
 import pl.piomin.services.stocktrader.model.TimeSeriesResponse;
+import pl.piomin.services.stocktrader.service.StockService;
 import pl.piomin.services.stocktrader.service.providers.ProfitService;
 import pl.piomin.services.stocktrader.service.providers.TwelveDataService;
 
 import java.time.*;
+import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 
 @RestController
@@ -24,13 +27,19 @@ public class StockController {
 
     private static final Logger LOG = LoggerFactory.getLogger(StockController.class);
 
-    private final TwelveDataService twelveDataService;
-    private final ProfitService profitService;
+//    private final TwelveDataService twelveDataService;
+//    private final ProfitService profitService;
 
-    public StockController(TwelveDataService twelveDataService,
-                           ProfitService profitService) {
-        this.twelveDataService = twelveDataService;
-        this.profitService = profitService;
+    private final StockService stockService;
+
+//    public StockController(TwelveDataService twelveDataService,
+//                           ProfitService profitService) {
+//        this.twelveDataService = twelveDataService;
+//        this.profitService = profitService;
+//    }
+
+    public StockController(StockService stockService) {
+        this.stockService = stockService;
     }
 
     @GetMapping("/{symbol}/time-series")
@@ -39,8 +48,10 @@ public class StockController {
             @RequestParam(defaultValue = "1day") String interval,
             @RequestParam(defaultValue = "30") String outputSize) {
 
-        TimeSeriesResponse response = twelveDataService
-                .getTimeSeries(symbol, interval, Integer.parseInt(outputSize));
+        List<StockIntradayData> response = stockService
+                .getIntradayData(symbol, Integer.parseInt(outputSize), Duration.ofMinutes(1));
+//                .getTimeSeries(symbol, interval, Integer.parseInt(outputSize));
+
 //        List<ProfitHistoricalDaily> values = profitService
 //                .getHistoricalIntradayData(symbol, LocalDateTime.now().minusDays(3), LocalDateTime.now(), interval);
         BarSeries series = new BaseBarSeriesBuilder()
@@ -55,17 +66,8 @@ public class StockController {
         Strategy strategy = new BaseStrategy(entryRule, exitRule);
 
         AtomicInteger i = new AtomicInteger();
-        response.getValues().reversed().forEach(value -> {
-            series.addBar(buildBar(value.getDateTime(),
-                    value.getOpen(),
-                    value.getClose(),
-                    value.getHigh(),
-                    value.getLow(),
-                    value.getVolume()));
-            LOG.info("Added: {}:{} -> {}", i.incrementAndGet(), value.getDateTime(), value.getClose());
-        });
-//        values.reversed().forEach(value -> {
-//            series.addBar(buildBar2(value.getDateTime(),
+//        response.getValues().reversed().forEach(value -> {
+//            series.addBar(buildBar(value.getDateTime(),
 //                    value.getOpen(),
 //                    value.getClose(),
 //                    value.getHigh(),
@@ -73,6 +75,15 @@ public class StockController {
 //                    value.getVolume()));
 //            LOG.info("Added: {}:{} -> {}", i.incrementAndGet(), value.getDateTime(), value.getClose());
 //        });
+        response.forEach(value -> {
+            series.addBar(buildBar2(value.getTime(),
+                    value.getOpen(),
+                    value.getClose(),
+                    value.getHigh(),
+                    value.getLow(),
+                    value.getVolume()));
+            LOG.info("Added: {}:{} -> {}", i.incrementAndGet(), value.getTime(), value.getClose());
+        });
 
         BarSeriesManager seriesManager = new BarSeriesManager(series);
         TradingRecord tradingRecord = seriesManager.run(strategy);

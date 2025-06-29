@@ -5,6 +5,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.web.bind.annotation.*;
 import pl.piomin.services.stocktrader.model.StockRecord;
 import pl.piomin.services.stocktrader.repository.StockRecordRepository;
+import pl.piomin.services.stocktrader.service.StockService;
 import pl.piomin.services.stocktrader.service.providers.ProfitService;
 
 import java.time.LocalDate;
@@ -15,26 +16,26 @@ import java.util.List;
 public class DataController {
 
     private static final Logger LOG = LoggerFactory.getLogger(DataController.class);
-    private final ProfitService profitService;
+    private final StockService stockService;
     private final StockRecordRepository repository;
 
-    public DataController(ProfitService profitService,
+    public DataController(StockService stockService,
                           StockRecordRepository repository) {
-        this.profitService = profitService;
+        this.stockService = stockService;
         this.repository = repository;
     }
 
     @GetMapping("/load/{ticker}/{days}/exchange/{exchange}")
     public void loadData(@PathVariable String ticker, @PathVariable int days, @PathVariable String exchange) {
         LOG.info("Loading data from ProfitAPI for {}", ticker);
-        var l = profitService.getHistoricalDailyData(ticker + "." + exchange, LocalDate.now().minusDays(days), LocalDate.now());
+        var l = stockService.getDailyData(ticker + "." + exchange, LocalDate.now().minusDays(days));
         l.stream().map(phd -> new StockRecord(ticker,
                 phd.getOpen(),
                 phd.getClose(),
                 phd.getHigh(),
                 phd.getLow(),
                 phd.getVolume(),
-                phd.getDateTime().toLocalDate(),
+                phd.getDate(),
                 exchange))
                 .forEach(repository::save);
     }
