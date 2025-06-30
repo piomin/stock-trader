@@ -6,21 +6,19 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-import org.ta4j.core.*;
-import org.ta4j.core.backtest.BarSeriesManager;
+import org.ta4j.core.BarSeries;
+import org.ta4j.core.BaseBar;
+import org.ta4j.core.BaseBarSeriesBuilder;
+import org.ta4j.core.TradingRecord;
 import org.ta4j.core.criteria.pnl.ProfitCriterion;
-import org.ta4j.core.indicators.RSIIndicator;
-import org.ta4j.core.indicators.helpers.ClosePriceIndicator;
 import org.ta4j.core.num.DecimalNum;
-import org.ta4j.core.num.DoubleNum;
-import org.ta4j.core.rules.CrossedDownIndicatorRule;
-import org.ta4j.core.rules.CrossedUpIndicatorRule;
 import pl.piomin.services.stocktrader.repository.StockRecordRepository;
+import pl.piomin.services.stocktrader.strategy.BuildAndRunStrategy;
 
 import java.time.Duration;
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.time.ZoneOffset;
+import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 
 @RestController
@@ -29,9 +27,12 @@ public class AnalyzeController {
 
     private static final Logger LOG = LoggerFactory.getLogger(AnalyzeController.class);
     private final StockRecordRepository repository;
+    private final Set<BuildAndRunStrategy> runnableStrategies;
 
-    public AnalyzeController(StockRecordRepository repository) {
+    public AnalyzeController(StockRecordRepository repository,
+                             Set<BuildAndRunStrategy> runnableStrategies) {
         this.repository = repository;
+        this.runnableStrategies = runnableStrategies;
     }
 
     @GetMapping("/rsi/{symbol}/days/{days}")
@@ -42,13 +43,6 @@ public class AnalyzeController {
                 .withName(symbol)
                 .build();
 
-        ClosePriceIndicator closePrice = new ClosePriceIndicator(series);
-        RSIIndicator rsi = new RSIIndicator(closePrice, 14);
-
-        Rule entryRule = new CrossedDownIndicatorRule(rsi, 30);
-        Rule exitRule = new CrossedUpIndicatorRule(rsi, 75);
-        Strategy strategy = new BaseStrategy(entryRule, exitRule);
-
         AtomicInteger i = new AtomicInteger();
         repository.findBySymbol(symbol)
                 .forEach(record -> {
@@ -56,16 +50,18 @@ public class AnalyzeController {
                     series.addBar(buildBar(record.getDate(), record.getOpen(), record.getClose(), record.getHigh(), record.getLow(), record.getVolume()));
                 });
 
-        BarSeriesManager seriesManager = new BarSeriesManager(series);
-        TradingRecord tradingRecord = seriesManager.run(strategy);
-        LOG.info("Trading records: {}", tradingRecord.getPositionCount());
-        LOG.info("Trading records: {}", tradingRecord.getTrades());
+        runnableStrategies.forEach(it -> {
+            TradingRecord tradingRecord = it.buildAndRun(series);
+            LOG.info("Trading records: {}", tradingRecord.getPositionCount());
+            LOG.info("Trading records: {}", tradingRecord.getTrades());
+            int index = tradingRecord.getLastEntry().getIndex();
+            LOG.info("Bar: {}", series.getBar(index));
 
-        int index = tradingRecord.getLastEntry().getIndex();
-        LOG.info("Bar: {}", series.getBar(index));
+            var n = new ProfitCriterion().calculate(series, tradingRecord);
+            LOG.info("Profit({}): {}", it.getClass().getSimpleName(), n.floatValue());
+        });
 
-        var n = new ProfitCriterion().calculate(series, tradingRecord);
-        return "Income: " + n.floatValue();
+        return "Income";
     }
 
     BaseBar buildBar(LocalDate date, Double open, Double close, Double high, Double low, Long volume) {

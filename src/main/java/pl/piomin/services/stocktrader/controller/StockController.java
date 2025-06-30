@@ -14,9 +14,11 @@ import org.ta4j.core.rules.CrossedUpIndicatorRule;
 import pl.piomin.services.stocktrader.model.StockDailyData;
 import pl.piomin.services.stocktrader.model.StockIntradayData;
 import pl.piomin.services.stocktrader.service.providers.StockService;
+import pl.piomin.services.stocktrader.strategy.BuildAndRunStrategy;
 
 import java.time.*;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 
 @RestController
@@ -25,12 +27,15 @@ public class StockController {
 
     private static final Logger LOG = LoggerFactory.getLogger(StockController.class);
     private final StockService stockService;
+    private final Set<BuildAndRunStrategy> runnableStrategies;
 
-    public StockController(StockService stockService) {
+    public StockController(StockService stockService,
+                           Set<BuildAndRunStrategy> runnableStrategies) {
+        this.runnableStrategies = runnableStrategies;
         this.stockService = stockService;
     }
 
-    @GetMapping("/{symbol}/daily/rsi")
+    @GetMapping("/{symbol}/daily/all")
     public String getDailyRSI(@PathVariable String symbol,
                               @RequestParam(defaultValue = "300") int limit,
                               @RequestParam(defaultValue = "WAR") String exchange) {
@@ -41,13 +46,6 @@ public class StockController {
         BarSeries series = new BaseBarSeriesBuilder()
                 .withName(symbol)
                 .build();
-
-        ClosePriceIndicator closePrice = new ClosePriceIndicator(series);
-        RSIIndicator rsi = new RSIIndicator(closePrice, 14);
-
-        Rule entryRule = new CrossedDownIndicatorRule(rsi, 25);
-        Rule exitRule = new CrossedUpIndicatorRule(rsi, 75);
-        Strategy strategy = new BaseStrategy(entryRule, exitRule);
 
         AtomicInteger i = new AtomicInteger();
         response.forEach(value -> {
@@ -60,13 +58,13 @@ public class StockController {
             LOG.info("Added: {}:{} -> {}", i.incrementAndGet(), value.getDate(), value.getClose());
         });
 
-        BarSeriesManager seriesManager = new BarSeriesManager(series);
-        TradingRecord tradingRecord = seriesManager.run(strategy);
-//        LOG.info("Trading records: {}", tradingRecord.getPositionCount());
-        LOG.info("Trading records: {}", tradingRecord.getTrades());
-
-        var n = new ProfitCriterion().calculate(series, tradingRecord);
-        return "OK: " + n.floatValue();
+        runnableStrategies.forEach(it -> {
+            TradingRecord tradingRecord = it.buildAndRun(series);
+            LOG.info("Trading records: {}", tradingRecord.getTrades());
+            var n = new ProfitCriterion().calculate(series, tradingRecord);
+            LOG.info("Profit({}): {}", it.getClass().getSimpleName(), n.floatValue());
+        });
+        return "OK";
     }
 
     BaseBar buildDailyBar(LocalDate date, Double open, Double close, Double high, Double low, Long volume) {
