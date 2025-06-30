@@ -1,4 +1,4 @@
-package pl.piomin.services.stocktrader.model;
+package pl.piomin.services.stocktrader.model.entity;
 
 import jakarta.persistence.*;
 

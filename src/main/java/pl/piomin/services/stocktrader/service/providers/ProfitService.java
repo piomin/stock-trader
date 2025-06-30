@@ -4,10 +4,9 @@ import org.springframework.http.HttpStatus;
 import org.springframework.web.client.RestClient;
 import org.springframework.web.util.UriComponentsBuilder;
 import pl.piomin.services.stocktrader.config.ProfitApiProperties;
-import pl.piomin.services.stocktrader.model.ProfitHistoricalDaily;
+import pl.piomin.services.stocktrader.model.providers.profit.ProfitHistoricalDaily;
 import pl.piomin.services.stocktrader.model.StockDailyData;
 import pl.piomin.services.stocktrader.model.StockIntradayData;
-import pl.piomin.services.stocktrader.service.StockService;
 
 import java.time.Duration;
 import java.time.LocalDate;
@@ -71,6 +70,7 @@ public class ProfitService implements StockService {
      * @param endDate    the end date for the historical data (inclusive), can be null
      * @return list of historical daily data points
      */
+    @Deprecated
     public List<ProfitHistoricalDaily> getHistoricalIntradayData(String ticker, LocalDateTime startDate, LocalDateTime endDate, String interval) {
         UriComponentsBuilder uriBuilder = UriComponentsBuilder
                 .fromPath(HISTORICAL_INTRADAY_ENDPOINT.replace("{ticker}", ticker));
@@ -110,6 +110,7 @@ public class ProfitService implements StockService {
      * @param endDate    the end date for the historical data (inclusive), can be null
      * @return list of historical daily data points
      */
+    @Deprecated
     public List<ProfitHistoricalDaily> getHistoricalDailyData(String ticker, LocalDate startDate, LocalDate endDate) {
         UriComponentsBuilder uriBuilder = UriComponentsBuilder
                 .fromPath(HISTORICAL_DAILY_ENDPOINT.replace("{ticker}", ticker));

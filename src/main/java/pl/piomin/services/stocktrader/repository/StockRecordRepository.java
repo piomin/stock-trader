@@ -1,7 +1,7 @@
 package pl.piomin.services.stocktrader.repository;
 
 import org.springframework.data.repository.CrudRepository;
-import pl.piomin.services.stocktrader.model.StockRecord;
+import pl.piomin.services.stocktrader.model.entity.StockRecord;
 
 import java.util.List;
 

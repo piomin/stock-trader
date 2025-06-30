@@ -1,4 +1,4 @@
-package pl.piomin.services.stocktrader.service;
+package pl.piomin.services.stocktrader.service.providers;
 
 import pl.piomin.services.stocktrader.model.StockDailyData;
 import pl.piomin.services.stocktrader.model.StockIntradayData;

@@ -5,7 +5,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import pl.piomin.services.stocktrader.service.StockService;
+import pl.piomin.services.stocktrader.service.providers.StockService;
 import pl.piomin.services.stocktrader.service.providers.ProfitService;
 import pl.piomin.services.stocktrader.service.providers.TwelveDataService;
 

@@ -12,10 +12,7 @@ import org.ta4j.core.num.DecimalNum;
 import org.ta4j.core.rules.CrossedDownIndicatorRule;
 import org.ta4j.core.rules.CrossedUpIndicatorRule;
 import pl.piomin.services.stocktrader.model.StockIntradayData;
-import pl.piomin.services.stocktrader.model.TimeSeriesResponse;
-import pl.piomin.services.stocktrader.service.StockService;
-import pl.piomin.services.stocktrader.service.providers.ProfitService;
-import pl.piomin.services.stocktrader.service.providers.TwelveDataService;
+import pl.piomin.services.stocktrader.service.providers.StockService;
 
 import java.time.*;
 import java.util.List;

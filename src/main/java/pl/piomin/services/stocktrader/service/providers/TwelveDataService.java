@@ -1,13 +1,11 @@
 package pl.piomin.services.stocktrader.service.providers;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.web.client.RestClient;
 import pl.piomin.services.stocktrader.config.TwelveDataApiProperties;
 import pl.piomin.services.stocktrader.model.StockDailyData;
 import pl.piomin.services.stocktrader.model.StockIntradayData;
-import pl.piomin.services.stocktrader.model.TimeSeriesResponse;
-import pl.piomin.services.stocktrader.service.StockService;
+import pl.piomin.services.stocktrader.model.providers.twelvedata.TimeSeriesResponse;
 
 import java.time.Duration;
 import java.time.LocalDate;

@@ -1,4 +1,4 @@
-package pl.piomin.services.stocktrader.model;
+package pl.piomin.services.stocktrader.model.entity;
 
 import jakarta.persistence.*;
 
@@ -11,6 +11,7 @@ public class ShareUpdate {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
     private String symbol;
+    private String exchange;
     @Column(name = "last_update", columnDefinition = "DATE")
     private LocalDate lastUpdate;
 
@@ -28,6 +29,14 @@ public class ShareUpdate {
 
     public void setSymbol(String symbol) {
         this.symbol = symbol;
+    }
+
+    public String getExchange() {
+        return exchange;
+    }
+
+    public void setExchange(String exchange) {
+        this.exchange = exchange;
     }
 
     public LocalDate getLastUpdate() {
