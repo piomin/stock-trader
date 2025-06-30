@@ -15,16 +15,18 @@ public class StockTrade {
     private double price;
     @Column(name = "date", columnDefinition = "DATE")
     private LocalDate date;
+    private String signalType;
 
     public StockTrade() {
 
     }
 
-    public StockTrade(String symbol, String type, double price, LocalDate date) {
+    public StockTrade(String symbol, String type, double price, LocalDate date, String signalType) {
         this.symbol = symbol;
         this.type = type;
         this.price = price;
         this.date = date;
+        this.signalType = signalType;
     }
 
     public Long getId() {
@@ -65,5 +67,13 @@ public class StockTrade {
 
     public void setDate(LocalDate date) {
         this.date = date;
+    }
+
+    public String getSignalType() {
+        return signalType;
+    }
+
+    public void setSignalType(String signalType) {
+        this.signalType = signalType;
     }
 }

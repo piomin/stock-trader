@@ -68,7 +68,8 @@ public class AnalyzeController {
                             new StockTrade(symbol,
                                     t.getType().name(),
                                     t.getValue().doubleValue(),
-                                    LocalDate.ofInstant(series.getBar(t.getIndex()).getEndTime(), ZoneOffset.UTC))
+                                    LocalDate.ofInstant(series.getBar(t.getIndex()).getEndTime(), ZoneOffset.UTC),
+                                    it.getClass().getSimpleName())
                     );
                 }
                 LOG.info("Trade: {}", t);
