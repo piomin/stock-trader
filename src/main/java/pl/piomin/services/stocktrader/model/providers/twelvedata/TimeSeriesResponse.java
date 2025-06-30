@@ -1,6 +1,5 @@
-package pl.piomin.services.stocktrader.model;
+package pl.piomin.services.stocktrader.model.providers.twelvedata;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
 import java.util.List;
 import java.util.Objects;
 

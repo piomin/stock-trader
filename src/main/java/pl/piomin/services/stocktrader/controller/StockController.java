@@ -11,13 +11,14 @@ import org.ta4j.core.indicators.helpers.ClosePriceIndicator;
 import org.ta4j.core.num.DecimalNum;
 import org.ta4j.core.rules.CrossedDownIndicatorRule;
 import org.ta4j.core.rules.CrossedUpIndicatorRule;
-import pl.piomin.services.stocktrader.model.ProfitHistoricalDaily;
-import pl.piomin.services.stocktrader.model.TimeSeriesResponse;
-import pl.piomin.services.stocktrader.service.ProfitService;
-import pl.piomin.services.stocktrader.service.TwelveDataService;
+import pl.piomin.services.stocktrader.model.StockDailyData;
+import pl.piomin.services.stocktrader.model.StockIntradayData;
+import pl.piomin.services.stocktrader.service.providers.StockService;
+import pl.piomin.services.stocktrader.strategy.BuildAndRunStrategy;
 
 import java.time.*;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 
 @RestController
@@ -25,82 +26,50 @@ import java.util.concurrent.atomic.AtomicInteger;
 public class StockController {
 
     private static final Logger LOG = LoggerFactory.getLogger(StockController.class);
+    private final StockService stockService;
+    private final Set<BuildAndRunStrategy> runnableStrategies;
 
-    private final TwelveDataService twelveDataService;
-    private final ProfitService profitService;
-
-    public StockController(TwelveDataService twelveDataService,
-                           ProfitService profitService) {
-        this.twelveDataService = twelveDataService;
-        this.profitService = profitService;
+    public StockController(StockService stockService,
+                           Set<BuildAndRunStrategy> runnableStrategies) {
+        this.runnableStrategies = runnableStrategies;
+        this.stockService = stockService;
     }
 
-    @GetMapping("/{symbol}/time-series")
-    public String getTimeSeries(
-            @PathVariable String symbol,
-            @RequestParam(defaultValue = "1day") String interval,
-            @RequestParam(defaultValue = "30") String outputSize) {
+    @GetMapping("/{symbol}/daily/all")
+    public String getDailyRSI(@PathVariable String symbol,
+                              @RequestParam(defaultValue = "300") int limit,
+                              @RequestParam(defaultValue = "WAR") String exchange) {
 
-        TimeSeriesResponse response = twelveDataService
-                .getTimeSeries(symbol, interval, outputSize);
-//        List<ProfitHistoricalDaily> values = profitService
-//                .getHistoricalIntradayData(symbol, LocalDateTime.now().minusDays(3), LocalDateTime.now(), interval);
+        List<StockDailyData> response = stockService
+                .getDailyData(symbol, exchange, LocalDate.now().minusDays(limit));
+
         BarSeries series = new BaseBarSeriesBuilder()
                 .withName(symbol)
                 .build();
 
-        ClosePriceIndicator closePrice = new ClosePriceIndicator(series);
-        RSIIndicator rsi = new RSIIndicator(closePrice, 14);
-
-        Rule entryRule = new CrossedDownIndicatorRule(rsi, 25);
-        Rule exitRule = new CrossedUpIndicatorRule(rsi, 75);
-        Strategy strategy = new BaseStrategy(entryRule, exitRule);
-
         AtomicInteger i = new AtomicInteger();
-        response.getValues().reversed().forEach(value -> {
-            series.addBar(buildBar(value.getDateTime(),
+        response.forEach(value -> {
+            series.addBar(buildDailyBar(value.getDate(),
                     value.getOpen(),
                     value.getClose(),
                     value.getHigh(),
                     value.getLow(),
                     value.getVolume()));
-            LOG.info("Added: {}:{} -> {}", i.incrementAndGet(), value.getDateTime(), value.getClose());
+            LOG.info("Added: {}:{} -> {}", i.incrementAndGet(), value.getDate(), value.getClose());
         });
-//        values.reversed().forEach(value -> {
-//            series.addBar(buildBar2(value.getDateTime(),
-//                    value.getOpen(),
-//                    value.getClose(),
-//                    value.getHigh(),
-//                    value.getLow(),
-//                    value.getVolume()));
-//            LOG.info("Added: {}:{} -> {}", i.incrementAndGet(), value.getDateTime(), value.getClose());
-//        });
 
-        BarSeriesManager seriesManager = new BarSeriesManager(series);
-        TradingRecord tradingRecord = seriesManager.run(strategy);
-//        LOG.info("Trading records: {}", tradingRecord.getPositionCount());
-        LOG.info("Trading records: {}", tradingRecord.getTrades());
-
-        var n = new ProfitCriterion().calculate(series, tradingRecord);
-        return "OK: " + n.floatValue();
+        runnableStrategies.forEach(it -> {
+            TradingRecord tradingRecord = it.buildAndRun(series);
+            LOG.info("Trading records: {}", tradingRecord.getTrades());
+            var n = new ProfitCriterion().calculate(series, tradingRecord);
+            LOG.info("Profit({}): {}", it.getClass().getSimpleName(), n.floatValue());
+        });
+        return "OK";
     }
 
-    BaseBar buildBar(LocalDateTime time, String open, String close, String high, String low, String volume) {
-        return new BaseBar(Duration.ofMinutes(5),
-//                Instant.now(),
-                time.toInstant(ZoneOffset.UTC),
-                DecimalNum.valueOf(open),
-                DecimalNum.valueOf(close),
-                DecimalNum.valueOf(high),
-                DecimalNum.valueOf(low),
-                DecimalNum.valueOf(volume),
-                DecimalNum.valueOf("0"), 0L);
-    }
-
-    BaseBar buildBar2(LocalDateTime time, Double open, Double close, Double high, Double low, Long volume) {
-        return new BaseBar(Duration.ofMinutes(5),
-//                Instant.now(),
-                time.toInstant(ZoneOffset.UTC),
+    BaseBar buildDailyBar(LocalDate date, Double open, Double close, Double high, Double low, Long volume) {
+        return new BaseBar(Duration.ofDays(1),
+                date.atStartOfDay().toInstant(ZoneOffset.UTC),
                 DecimalNum.valueOf(open),
                 DecimalNum.valueOf(close),
                 DecimalNum.valueOf(high),

@@ -1,4 +1,4 @@
-package pl.piomin.services.stocktrader.model;
+package pl.piomin.services.stocktrader.model.providers.profit;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import java.time.Instant;
