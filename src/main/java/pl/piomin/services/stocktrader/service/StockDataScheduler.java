@@ -34,7 +34,7 @@ public class StockDataScheduler {
     /**
      * Scheduled task that runs once per hour at the beginning of the hour
      */
-    @Scheduled(cron = "0 0 22 * * ?")
+    @Scheduled(cron = "0 0 23 * * ?")
     public void updateStockDataHourly() {
         LOG.info("Starting scheduled stock data update");
         try {

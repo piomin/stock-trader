@@ -33,6 +33,7 @@ public class ImportDataScheduler {
         LOG.info("Starting scheduled stock data update");
         try {
             shareUpdateRepository.findAll().forEach(this::run);
+            shareUpdateRepository.findById(100L).ifPresent(this::run);
             LOG.info("Completed stock data update");
         } catch (Exception e) {
             LOG.error("Error during scheduled stock data update", e);
@@ -43,15 +44,16 @@ public class ImportDataScheduler {
         LOG.info("Importing data for symbol: {}", shareUpdate.getSymbol());
         LocalDate startDate;
         StockRecord record = repository.findFirstBySymbolOrderByDateDesc(shareUpdate.getSymbol());
+        LOG.info("Latest record found: {}", record);
         if (record == null) {
             startDate = LocalDate.now().minusDays(365);
         } else {
             startDate = record.getDate().plusDays(1);
         }
 
-        LOG.info("Latest record found: {}", record);
-        stockService.getDailyData(shareUpdate.getSymbol(), shareUpdate.getExchange(), startDate)
-                .stream().map(phd -> new StockRecord(shareUpdate.getSymbol(),
+        var l = stockService.getDailyData(shareUpdate.getSymbol(), shareUpdate.getExchange(), startDate);
+        LOG.info("Number of records: {}", l.size());
+        l.stream().map(phd -> new StockRecord(shareUpdate.getSymbol(),
                 phd.getOpen(),
                 phd.getClose(),
                 phd.getHigh(),
