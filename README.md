@@ -1,5 +1,11 @@
 # Stock Trader Application
 
+## Motivation
+
+This application aims to provide a simple way to analyze trends in trade stocks. It loads data from an external API, inserts it to the local database and provides a simple interface to analyze the data. The application is based on the [TA4J](https://ta4j.github.io/) library.
+
+## Usage
+
 Generate your API token. For now, the app supports [TwelveData](https://api.twelvedata.com) or [Profit](https://api.profit.com) APIs. Then, set your token as an environment variable:
 ```shell
 export STOCK_API_KEY=<your_token>

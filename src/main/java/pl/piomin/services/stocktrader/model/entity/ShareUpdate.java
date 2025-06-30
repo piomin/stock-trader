@@ -10,6 +10,7 @@ public class ShareUpdate {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+    @Column(unique = true)
     private String symbol;
     private String exchange;
     @Column(name = "last_update", columnDefinition = "DATE")

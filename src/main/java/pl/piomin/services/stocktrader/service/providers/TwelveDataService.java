@@ -44,8 +44,8 @@ public class TwelveDataService implements StockService {
     }
 
     @Override
-    public List<StockDailyData> getDailyData(String symbol, LocalDate startDate) {
-        return getTimeSeries(symbol, "1day", (int) ChronoUnit.DAYS.between(LocalDate.now(), startDate))
+    public List<StockDailyData> getDailyData(String symbol, String exchange, LocalDate startDate) {
+        return getTimeSeries(symbol + ":" + exchange, "1day", (int) ChronoUnit.DAYS.between(LocalDate.now(), startDate))
                 .getValues()
                 .reversed()
                 .stream()

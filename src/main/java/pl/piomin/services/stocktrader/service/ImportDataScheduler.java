@@ -28,7 +28,7 @@ public class ImportDataScheduler {
         this.stockService = stockService;
     }
 
-    @Scheduled(cron = "0 * * * * *")
+    @Scheduled(cron = "0 0 22 * * ?")
     public void importStockData() {
         LOG.info("Starting scheduled stock data update");
         try {
@@ -41,9 +41,16 @@ public class ImportDataScheduler {
 
     public void run(ShareUpdate shareUpdate) {
         LOG.info("Importing data for symbol: {}", shareUpdate.getSymbol());
+        LocalDate startDate;
         StockRecord record = repository.findFirstBySymbolOrderByDateDesc(shareUpdate.getSymbol());
+        if (record == null) {
+            startDate = LocalDate.now().minusDays(365);
+        } else {
+            startDate = record.getDate().plusDays(1);
+        }
+
         LOG.info("Latest record found: {}", record);
-        stockService.getDailyData(shareUpdate.getSymbol(), record.getDate().plusDays(1))
+        stockService.getDailyData(shareUpdate.getSymbol(), shareUpdate.getExchange(), startDate)
                 .stream().map(phd -> new StockRecord(shareUpdate.getSymbol(),
                 phd.getOpen(),
                 phd.getClose(),
@@ -51,7 +58,7 @@ public class ImportDataScheduler {
                 phd.getLow(),
                 phd.getVolume(),
                 phd.getDate(),
-                "WAR"))
+                shareUpdate.getExchange()))
                 .forEach(repository::save);
         shareUpdate.setLastUpdate(LocalDate.now());
         shareUpdateRepository.save(shareUpdate);

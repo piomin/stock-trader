@@ -48,8 +48,8 @@ public class ProfitService implements StockService {
     }
 
     @Override
-    public List<StockDailyData> getDailyData(String symbol, LocalDate startDate) {
-        return getHistoricalDailyData(symbol, startDate, LocalDate.now())
+    public List<StockDailyData> getDailyData(String symbol, String exchange, LocalDate startDate) {
+        return getHistoricalDailyData(symbol + "." + exchange, startDate, LocalDate.now())
                 .stream()
                 .map(v -> StockDailyData.builder()
                         .date(v.getDateTime().toLocalDate())

@@ -32,7 +32,7 @@ public class DataController {
     @GetMapping("/load/{ticker}/{days}/exchange/{exchange}")
     public void loadData(@PathVariable String ticker, @PathVariable int days, @PathVariable String exchange) {
         LOG.info("Loading data from ProfitAPI for {}", ticker);
-        var l = stockService.getDailyData(ticker + "." + exchange, LocalDate.now().minusDays(days));
+        var l = stockService.getDailyData(ticker, exchange, LocalDate.now().minusDays(days));
         l.stream().map(phd -> new StockRecord(ticker,
                 phd.getOpen(),
                 phd.getClose(),
@@ -64,4 +64,13 @@ public class DataController {
         return (List<ShareUpdate>) shareUpdateRepository.findAll();
     }
 
+    @DeleteMapping("/updates/{id}")
+    public void deleteShareUpdate(@PathVariable Long id) {
+        shareUpdateRepository.deleteById(id);
+    }
+
+    @DeleteMapping("/updates/all")
+    public void deleteAll() {
+        shareUpdateRepository.deleteAll();
+    }
 }

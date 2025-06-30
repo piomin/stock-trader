@@ -11,6 +11,7 @@ import org.ta4j.core.indicators.helpers.ClosePriceIndicator;
 import org.ta4j.core.num.DecimalNum;
 import org.ta4j.core.rules.CrossedDownIndicatorRule;
 import org.ta4j.core.rules.CrossedUpIndicatorRule;
+import pl.piomin.services.stocktrader.model.StockDailyData;
 import pl.piomin.services.stocktrader.model.StockIntradayData;
 import pl.piomin.services.stocktrader.service.providers.StockService;
 
@@ -23,34 +24,20 @@ import java.util.concurrent.atomic.AtomicInteger;
 public class StockController {
 
     private static final Logger LOG = LoggerFactory.getLogger(StockController.class);
-
-//    private final TwelveDataService twelveDataService;
-//    private final ProfitService profitService;
-
     private final StockService stockService;
-
-//    public StockController(TwelveDataService twelveDataService,
-//                           ProfitService profitService) {
-//        this.twelveDataService = twelveDataService;
-//        this.profitService = profitService;
-//    }
 
     public StockController(StockService stockService) {
         this.stockService = stockService;
     }
 
-    @GetMapping("/{symbol}/time-series")
-    public String getTimeSeries(
-            @PathVariable String symbol,
-            @RequestParam(defaultValue = "1day") String interval,
-            @RequestParam(defaultValue = "30") String outputSize) {
+    @GetMapping("/{symbol}/daily/rsi")
+    public String getDailyRSI(@PathVariable String symbol,
+                              @RequestParam(defaultValue = "300") int limit,
+                              @RequestParam(defaultValue = "WAR") String exchange) {
 
-        List<StockIntradayData> response = stockService
-                .getIntradayData(symbol, Integer.parseInt(outputSize), Duration.ofMinutes(1));
-//                .getTimeSeries(symbol, interval, Integer.parseInt(outputSize));
+        List<StockDailyData> response = stockService
+                .getDailyData(symbol, exchange, LocalDate.now().minusDays(limit));
 
-//        List<ProfitHistoricalDaily> values = profitService
-//                .getHistoricalIntradayData(symbol, LocalDateTime.now().minusDays(3), LocalDateTime.now(), interval);
         BarSeries series = new BaseBarSeriesBuilder()
                 .withName(symbol)
                 .build();
@@ -63,23 +50,14 @@ public class StockController {
         Strategy strategy = new BaseStrategy(entryRule, exitRule);
 
         AtomicInteger i = new AtomicInteger();
-//        response.getValues().reversed().forEach(value -> {
-//            series.addBar(buildBar(value.getDateTime(),
-//                    value.getOpen(),
-//                    value.getClose(),
-//                    value.getHigh(),
-//                    value.getLow(),
-//                    value.getVolume()));
-//            LOG.info("Added: {}:{} -> {}", i.incrementAndGet(), value.getDateTime(), value.getClose());
-//        });
         response.forEach(value -> {
-            series.addBar(buildBar2(value.getTime(),
+            series.addBar(buildDailyBar(value.getDate(),
                     value.getOpen(),
                     value.getClose(),
                     value.getHigh(),
                     value.getLow(),
                     value.getVolume()));
-            LOG.info("Added: {}:{} -> {}", i.incrementAndGet(), value.getTime(), value.getClose());
+            LOG.info("Added: {}:{} -> {}", i.incrementAndGet(), value.getDate(), value.getClose());
         });
 
         BarSeriesManager seriesManager = new BarSeriesManager(series);
@@ -91,22 +69,9 @@ public class StockController {
         return "OK: " + n.floatValue();
     }
 
-    BaseBar buildBar(LocalDateTime time, String open, String close, String high, String low, String volume) {
-        return new BaseBar(Duration.ofMinutes(5),
-//                Instant.now(),
-                time.toInstant(ZoneOffset.UTC),
-                DecimalNum.valueOf(open),
-                DecimalNum.valueOf(close),
-                DecimalNum.valueOf(high),
-                DecimalNum.valueOf(low),
-                DecimalNum.valueOf(volume),
-                DecimalNum.valueOf("0"), 0L);
-    }
-
-    BaseBar buildBar2(LocalDateTime time, Double open, Double close, Double high, Double low, Long volume) {
-        return new BaseBar(Duration.ofMinutes(5),
-//                Instant.now(),
-                time.toInstant(ZoneOffset.UTC),
+    BaseBar buildDailyBar(LocalDate date, Double open, Double close, Double high, Double low, Long volume) {
+        return new BaseBar(Duration.ofDays(1),
+                date.atStartOfDay().toInstant(ZoneOffset.UTC),
                 DecimalNum.valueOf(open),
                 DecimalNum.valueOf(close),
                 DecimalNum.valueOf(high),

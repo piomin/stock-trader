@@ -9,5 +9,5 @@ import java.util.List;
 
 public interface StockService {
     List<StockIntradayData> getIntradayData(String symbol, int limit, Duration interval);
-    List<StockDailyData> getDailyData(String symbol, LocalDate startDate);
+    List<StockDailyData> getDailyData(String symbol, String exchange, LocalDate startDate);
 }
