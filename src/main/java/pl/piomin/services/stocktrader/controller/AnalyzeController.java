@@ -6,13 +6,12 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-import org.ta4j.core.BarSeries;
-import org.ta4j.core.BaseBar;
-import org.ta4j.core.BaseBarSeriesBuilder;
-import org.ta4j.core.TradingRecord;
+import org.ta4j.core.*;
 import org.ta4j.core.criteria.pnl.ProfitCriterion;
 import org.ta4j.core.num.DecimalNum;
+import pl.piomin.services.stocktrader.model.entity.StockTrade;
 import pl.piomin.services.stocktrader.repository.StockRecordRepository;
+import pl.piomin.services.stocktrader.repository.StockTradeRepository;
 import pl.piomin.services.stocktrader.strategy.BuildAndRunStrategy;
 
 import java.time.Duration;
@@ -27,18 +26,19 @@ public class AnalyzeController {
 
     private static final Logger LOG = LoggerFactory.getLogger(AnalyzeController.class);
     private final StockRecordRepository repository;
+    private final StockTradeRepository stockTradeRepository;
     private final Set<BuildAndRunStrategy> runnableStrategies;
 
     public AnalyzeController(StockRecordRepository repository,
+                             StockTradeRepository stockTradeRepository,
                              Set<BuildAndRunStrategy> runnableStrategies) {
         this.repository = repository;
+        this.stockTradeRepository = stockTradeRepository;
         this.runnableStrategies = runnableStrategies;
     }
 
-    @GetMapping("/rsi/{symbol}/days/{days}")
-    public String rsiStrategy(@PathVariable String symbol, @PathVariable int days) {
-        LOG.info("RSI strategy");
-
+    @GetMapping("/{symbol}/all")
+    public String allStrategies(@PathVariable String symbol) {
         BarSeries series = new BaseBarSeriesBuilder()
                 .withName(symbol)
                 .build();
@@ -54,11 +54,25 @@ public class AnalyzeController {
             TradingRecord tradingRecord = it.buildAndRun(series);
             LOG.info("Trading records: {}", tradingRecord.getPositionCount());
             LOG.info("Trading records: {}", tradingRecord.getTrades());
-            int index = tradingRecord.getLastEntry().getIndex();
-            LOG.info("Bar: {}", series.getBar(index));
+            if (tradingRecord.getLastEntry() != null) {
+                int index = tradingRecord.getLastEntry().getIndex();
+                LOG.info("Bar: {}", series.getBar(index));
 
-            var n = new ProfitCriterion().calculate(series, tradingRecord);
-            LOG.info("Profit({}): {}", it.getClass().getSimpleName(), n.floatValue());
+                var n = new ProfitCriterion().calculate(series, tradingRecord);
+                LOG.info("Profit({}): {}", it.getClass().getSimpleName(), n.floatValue());
+            }
+            tradingRecord.getTrades().forEach(t -> {
+                StockTrade trade = stockTradeRepository.findBySymbolAndTypeAndDate(symbol, t.getType().name(), LocalDate.ofInstant(series.getBar(t.getIndex()).getEndTime(), ZoneOffset.UTC));
+                if (trade == null) {
+                    stockTradeRepository.save(
+                            new StockTrade(symbol,
+                                    t.getType().name(),
+                                    t.getValue().doubleValue(),
+                                    LocalDate.ofInstant(series.getBar(t.getIndex()).getEndTime(), ZoneOffset.UTC))
+                    );
+                }
+                LOG.info("Trade: {}", t);
+            });
         });
 
         return "Income";

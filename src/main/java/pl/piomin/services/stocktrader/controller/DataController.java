@@ -5,8 +5,10 @@ import org.slf4j.LoggerFactory;
 import org.springframework.web.bind.annotation.*;
 import pl.piomin.services.stocktrader.model.entity.ShareUpdate;
 import pl.piomin.services.stocktrader.model.entity.StockRecord;
+import pl.piomin.services.stocktrader.model.entity.StockTrade;
 import pl.piomin.services.stocktrader.repository.ShareUpdateRepository;
 import pl.piomin.services.stocktrader.repository.StockRecordRepository;
+import pl.piomin.services.stocktrader.repository.StockTradeRepository;
 import pl.piomin.services.stocktrader.service.providers.StockService;
 
 import java.time.LocalDate;
@@ -19,13 +21,16 @@ public class DataController {
     private static final Logger LOG = LoggerFactory.getLogger(DataController.class);
     private final StockService stockService;
     private final StockRecordRepository stockRecordRepository;
+    private final StockTradeRepository stockTradeRepository;
     private final ShareUpdateRepository shareUpdateRepository;
 
     public DataController(StockService stockService,
                           StockRecordRepository stockRecordRepository,
+                          StockTradeRepository stockTradeRepository,
                           ShareUpdateRepository shareUpdateRepository) {
         this.stockService = stockService;
         this.stockRecordRepository = stockRecordRepository;
+        this.stockTradeRepository = stockTradeRepository;
         this.shareUpdateRepository = shareUpdateRepository;
     }
 
@@ -72,5 +77,10 @@ public class DataController {
     @DeleteMapping("/updates/all")
     public void deleteAll() {
         shareUpdateRepository.deleteAll();
+    }
+
+    @GetMapping("/trades")
+    public List<StockTrade> findLatestTrades() {
+        return stockTradeRepository.findByTypeOrderByDateDesc("BUY");
     }
 }

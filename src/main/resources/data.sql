@@ -35,4 +35,3 @@ insert into share_update(symbol, exchange) values('TEN', 'WAR');
 insert into share_update(symbol, exchange) values('VOX', 'WAR');
 insert into share_update(symbol, exchange) values('VRC', 'WAR');
 insert into share_update(symbol, exchange) values('WPL', 'WAR');
-insert into share_update(symbol, exchange) values('ZAB', 'WAR');
