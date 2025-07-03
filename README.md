@@ -29,6 +29,7 @@ Then, export your database connection properties:
 ```shell
 export DATABASE_USER=<your_user>
 export DATABASE_PASS=<your_pass>
+export DATABASE_HOST=<your_host>:<your_port>
 ```
 
 Finally, run the app:
