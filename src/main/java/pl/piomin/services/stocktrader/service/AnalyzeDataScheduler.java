@@ -5,12 +5,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.ta4j.core.*;
-import org.ta4j.core.backtest.BarSeriesManager;
-import org.ta4j.core.indicators.RSIIndicator;
-import org.ta4j.core.indicators.helpers.ClosePriceIndicator;
 import org.ta4j.core.num.DecimalNum;
-import org.ta4j.core.rules.CrossedDownIndicatorRule;
-import org.ta4j.core.rules.CrossedUpIndicatorRule;
 import pl.piomin.services.stocktrader.repository.ShareUpdateRepository;
 import pl.piomin.services.stocktrader.repository.StockRecordRepository;
 import pl.piomin.services.stocktrader.strategy.BuildAndRunStrategy;
@@ -21,16 +16,16 @@ import java.time.ZoneOffset;
 import java.util.Set;
 
 @Service
-public class StockDataScheduler {
+public class AnalyzeDataScheduler {
 
-    private static final Logger LOG = LoggerFactory.getLogger(StockDataScheduler.class);
+    private static final Logger LOG = LoggerFactory.getLogger(AnalyzeDataScheduler.class);
     private final StockRecordRepository repository;
     private final ShareUpdateRepository shareUpdateRepository;
     private final Set<BuildAndRunStrategy> runnableStrategies;
 
-    public StockDataScheduler(StockRecordRepository repository,
-                              ShareUpdateRepository shareUpdateRepository,
-                              Set<BuildAndRunStrategy> runnableStrategies) {
+    public AnalyzeDataScheduler(StockRecordRepository repository,
+                                ShareUpdateRepository shareUpdateRepository,
+                                Set<BuildAndRunStrategy> runnableStrategies) {
         this.repository = repository;
         this.shareUpdateRepository = shareUpdateRepository;
         this.runnableStrategies = runnableStrategies;
@@ -39,7 +34,7 @@ public class StockDataScheduler {
     /**
      * Scheduled task that runs once per hour at the beginning of the hour
      */
-    @Scheduled(cron = "0 0 23 * * ?")
+    @Scheduled(cron = "${app.scheduler.analyze}")
     public void updateStockDataHourly() {
         LOG.info("Starting scheduled stock data update");
         try {

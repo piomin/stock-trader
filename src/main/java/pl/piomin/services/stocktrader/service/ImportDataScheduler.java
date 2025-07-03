@@ -21,14 +21,14 @@ public class ImportDataScheduler {
     private final StockService stockService;
 
     public ImportDataScheduler(StockRecordRepository repository,
-                               ShareUpdateRepository shareUpdateRepository,
-                               StockService stockService) {
+                             ShareUpdateRepository shareUpdateRepository,
+                             StockService stockService) {
         this.repository = repository;
         this.shareUpdateRepository = shareUpdateRepository;
         this.stockService = stockService;
     }
 
-    @Scheduled(cron = "0 0 22 * * ?")
+    @Scheduled(cron = "${app.scheduler.import}")
     public void importStockData() {
         LOG.info("Starting scheduled stock data update");
         try {
