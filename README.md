@@ -30,6 +30,7 @@ Then, export your database connection properties:
 export DATABASE_USER=<your_user>
 export DATABASE_PASS=<your_pass>
 export DATABASE_HOST=<your_host>:<your_port>
+export DATABASE_NAME=<your_db_name>
 ```
 
 Finally, run the app:
