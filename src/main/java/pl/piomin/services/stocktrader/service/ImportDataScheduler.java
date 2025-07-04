@@ -30,13 +30,12 @@ public class ImportDataScheduler {
 
     @Scheduled(cron = "${app.scheduler.import}")
     public void importStockData() {
-        LOG.info("Starting scheduled stock data update");
+        LOG.info("Starting scheduled stock data import");
         try {
             shareUpdateRepository.findAll().forEach(this::run);
-            shareUpdateRepository.findById(100L).ifPresent(this::run);
-            LOG.info("Completed stock data update");
+            LOG.info("Completed stock data import");
         } catch (Exception e) {
-            LOG.error("Error during scheduled stock data update", e);
+            LOG.error("Error during scheduled stock data import", e);
         }
     }
 

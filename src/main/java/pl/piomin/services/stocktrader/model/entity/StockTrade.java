@@ -5,6 +5,9 @@ import jakarta.persistence.*;
 import java.time.LocalDate;
 
 @Entity
+@Table(uniqueConstraints = {
+        @UniqueConstraint(columnNames = { "symbol", "date", "signalType" })
+})
 public class StockTrade {
 
     @Id
