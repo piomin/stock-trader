@@ -81,14 +81,14 @@ public class AnalyzeDataScheduler {
                                     it.getClass().getSimpleName())
                     );
                 }
-                LOG.info("Trade: {}", t);
+//                LOG.info("[{}] {}: {}", symbol, it.getClass().getSimpleName(), t);
             });
             Trade lastEntry = tradingRecord.getLastEntry();
             if (lastEntry != null) {
                 Bar b = series.getBar(lastEntry.getIndex());
                 boolean isRecent = b.getEndTime().isAfter(LocalDate.now().minusDays(16).atStartOfDay().toInstant(ZoneOffset.UTC));
                 if (isRecent) {
-                    LOG.info("[{}] Last entry: {} - Bar: {}", symbol, lastEntry, series.getBar(lastEntry.getIndex()));
+                    LOG.info("[{}] [{}] {} - Signal: {}", symbol, it.getClass().getSimpleName(), lastEntry, series.getBar(lastEntry.getIndex()).getEndTime());
                 }
             }
         });
