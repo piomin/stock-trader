@@ -34,7 +34,7 @@ public class ProfitService implements StockService {
 
     @Override
     public List<StockIntradayData> getIntradayData(String symbol, int limit, Duration interval) {
-        return getHistoricalIntradayData(symbol, LocalDateTime.now().minusDays(limit), LocalDateTime.now(), interval.toString())
+        return getHistoricalIntradayData(symbol, LocalDateTime.now().minusDays(limit), null, interval.toString())
                 .stream()
                 .map(v -> StockIntradayData.builder()
                         .time(v.getDateTime())
@@ -49,7 +49,7 @@ public class ProfitService implements StockService {
 
     @Override
     public List<StockDailyData> getDailyData(String symbol, String exchange, LocalDate startDate) {
-        return getHistoricalDailyData(symbol + "." + exchange, startDate, LocalDate.now())
+        return getHistoricalDailyData(symbol + "." + exchange, startDate, null)
                 .stream()
                 .map(v -> StockDailyData.builder()
                         .date(v.getDateTime().toLocalDate())
